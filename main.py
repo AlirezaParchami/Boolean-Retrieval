@@ -1,5 +1,6 @@
 #from nltk.stem import PorterStemmer
 #from nltk.tokenize import sent_tokenize, word_tokenize
+from collections import OrderedDict
 frequent_words = set()
 words = dict()
 
@@ -24,16 +25,16 @@ def read_docs():
         f = my_file.read().lower()
         f = f.split()
         for word in f:
-            word = word.replace('.', '').replace('?', '').replace(',', '')
-            if word not in frequent_words:  # So we will add it to our dictionary
+            edited_word = word.replace('.', '').replace('?', '').replace(',', '')
+            if edited_word not in frequent_words:  # So we will add it to our dictionary
                 indices = [i for i, x in enumerate(f) if x == word]
-                if word not in words:
+                if edited_word not in words:
                     entry_value = append_docId_pos(i, indices, dict())  # Entry_value is a dictionary of docID and Positions
-                    words[word] = entry_value
-                elif word in words:
-                    entry_value = dict(words.get(word))
+                    words[edited_word] = entry_value
+                elif edited_word in words:
+                    entry_value = dict(words.get(edited_word))
                     entry_value = append_docId_pos(i, indices, entry_value)
-                    words[word] = entry_value
+                    words[edited_word] = entry_value
 
         #for line in f:
         #    for word in line.split():
@@ -48,8 +49,6 @@ def read_docs():
 
 read_common_words()
 read_docs()
-words = dict(sorted(words.items(), key=lambda x:x[0]))
+words = sorted(words.items(), key=lambda t: t[0])
 #ps = PorterStemmer()
 print(words)
-#print(words)
-
