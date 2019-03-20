@@ -28,29 +28,29 @@ def read_docs():
         my_file = open(st, "r")
         f = my_file.read().lower()
         f = f.split()
+        # We find all indices of a word in document and add in Inverted index
+        # So I add the word in added_words[] to prevent appear repeated indices for same docID in inverted list.
+        added_words = []
         for word in f:
+            # I should consider the main part of word
             edited_word = word.replace('.', '').replace('?', '').replace(',', '')
             stem_word = ps.stem(edited_word)
-            if stem_word not in frequent_words:  # So we will add it to our dictionary
+            # I use edited_word in condition because stem_word is wrong.
+            # Ex. friends and friend are different words that I should find its indices but have same stem
+            if stem_word not in frequent_words and edited_word not in added_words:
+                # I should find original from of word through document
                 indices = [i for i, x in enumerate(f) if x == word]
                 if stem_word not in words.keys():
-                    entry_value = append_docId_pos(i, indices, dict())  # Entry_value is a dictionary of docID and Positions
+                    # Entry_value is a dictionary of docID and Positions
+                    entry_value = append_docId_pos(i, indices, dict())
                     words[stem_word] = entry_value
+                    added_words.append(edited_word)
                 elif stem_word in words.keys():
                     entry_value = dict(words.get(stem_word))
                     entry_value = append_docId_pos(i, indices, entry_value)
                     words[stem_word] = entry_value
-
-
-        #for line in f:
-        #    for word in line.split():
-        #        new_word = word.rstrip('\n').rstrip('.').rstrip(',').rstrip('?').lower()
-        #        if new_word not in frequent_words:  # So we will add it to out dictionary
-        #            if new_word not in words:
-        #                words[new_word] = i
-        #                words.append(word.rstrip('\n').rstrip('.').rstrip(',').rstrip('?'))
-    #sorted(words.keys(), key= lambda x:x[0])
-    #print(words)
+                    added_words.append(edited_word)
+        print(added_words)
 
 
 read_common_words()
