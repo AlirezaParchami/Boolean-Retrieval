@@ -1,9 +1,9 @@
-#from nltk.stem import PorterStemmer
-#from nltk.tokenize import sent_tokenize, word_tokenize
+from nltk.stem import PorterStemmer
+from nltk.tokenize import sent_tokenize, word_tokenize
 from collections import OrderedDict
 frequent_words = set()
 words = dict()
-
+ps = PorterStemmer()
 
 def read_common_words():
     f = open("frequent.txt", "r")
@@ -13,8 +13,12 @@ def read_common_words():
 
 
 def append_docId_pos(docId, indices, docID_pos_dic):
-#    docID_pos_dic = dict()
-    docID_pos_dic[docId] = indices
+    if docId not in docID_pos_dic.keys():
+        docID_pos_dic[docId] = indices
+    elif docId in docID_pos_dic.keys():
+        positions = docID_pos_dic[docId]
+        positions = positions + indices
+        docID_pos_dic[docId] = positions
     return docID_pos_dic
 
 
@@ -26,15 +30,17 @@ def read_docs():
         f = f.split()
         for word in f:
             edited_word = word.replace('.', '').replace('?', '').replace(',', '')
-            if edited_word not in frequent_words:  # So we will add it to our dictionary
+            stem_word = ps.stem(edited_word)
+            if stem_word not in frequent_words:  # So we will add it to our dictionary
                 indices = [i for i, x in enumerate(f) if x == word]
-                if edited_word not in words:
+                if stem_word not in words.keys():
                     entry_value = append_docId_pos(i, indices, dict())  # Entry_value is a dictionary of docID and Positions
-                    words[edited_word] = entry_value
-                elif edited_word in words:
-                    entry_value = dict(words.get(edited_word))
+                    words[stem_word] = entry_value
+                elif stem_word in words.keys():
+                    entry_value = dict(words.get(stem_word))
                     entry_value = append_docId_pos(i, indices, entry_value)
-                    words[edited_word] = entry_value
+                    words[stem_word] = entry_value
+
 
         #for line in f:
         #    for word in line.split():
@@ -49,6 +55,6 @@ def read_docs():
 
 read_common_words()
 read_docs()
-words = sorted(words.items(), key=lambda t: t[0])
-#ps = PorterStemmer()
+words = OrderedDict(sorted(words.items(), key=lambda t: t[0]))
 print(words)
+#ps = PorterStemmer()
