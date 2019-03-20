@@ -5,7 +5,6 @@ frequent_words = set()
 words = dict()
 ps = PorterStemmer()
 
-
 def read_common_words():
     f = open("frequent.txt", "r")
     for x in f:
@@ -24,7 +23,8 @@ def append_docId_pos(docId, indices, docID_pos_dic):
 
 
 def read_docs():
-    for i in range(1, 6):
+    global number_of_doc
+    for i in range(1, number_of_doc + 1):
         st = str(i) + ".txt"
         my_file = open(st, "r")
         f = my_file.read().lower()
@@ -53,63 +53,53 @@ def read_docs():
                     added_words.append(edited_word)
 
 
-def read_queries(num):
-    for i in range(1, num):
-        st = "./Queries/" + str(i) + ".txt"
-        my_file = open(st, "r")
-        f = my_file.read()
-        f = f.split()
-        keywords = [i for i, x in enumerate(f) if x == 'AND' or x == 'OR' or x == 'NOT' or x == 'with' or x == 'Near']
-        print(keywords)
-        result = []
-
-        for j in range(0, len(keywords)-1):
-            if (keywords[j+1] == keywords[j] + 1) and (f[keywords[j]] == "OR" or f[keywords[j]] == "AND") and (f[keywords[j+1]] != "NOT"):
-                result = "invalid"
-                break
-        if result == "invalid":
-            print("Invalid Query!")
-            continue
-
-        for index in keywords:
-            if f[index] == "AND":
-                left_operand = f[index-1]
-                not_operand = False
-                right_operand = f[index+1]
-                if index + 1 in keywords:  # The word must be "NOT"
-                    not_operand = True
-                    right_operand = f[index+2]
-
-
-def intersect(t1, t2):
+def intersect(t1, t2=None, t3=None):
     global words
     t1 = ps.stem(t1)
-    t2 = ps.stem(t2)
     doc1 = set(words[t1].keys())
+    if t2==None:
+        return doc1
+    t2 = ps.stem(t2)
     doc2 = set(words[t2].keys())
-    result = doc1.intersection(doc2)
-    print(result)
+    if t3==None:
+        result = doc1.intersection(doc2)
+    else:
+        t3 = ps.stem(t3)
+        doc3 = set(words[t3].keys())
+        result = doc1.intersection(doc2).intersection(doc3)
     return result
 
 
-def union(t1, t2):
+def union(t1, t2=None, t3=None):
     global words
     t1 = ps.stem(t1)
-    t2 = ps.stem(t2)
     doc1 = set(words[t1].keys())
+    if t2==None:
+        return doc1
+    t2 = ps.stem(t2)
     doc2 = set(words[t2].keys())
-    result = doc1.union(doc2)
-    print(result)
+    if t3==None:
+        result = doc1.union(doc2)
+    else:
+        t3 = ps.stem(t3)
+        doc3 = set(words[t3].keys())
+        result = doc1.union(doc2).union(doc3)
     return result
 
 
-def NOT(t1):
+def NOT(t1 , op, t2):
     global words
-    t1 = ps.stem(t1)
-    doc1 = set(words[t1].keys())
-    print(doc1)
-    result = set(range(1, 7)).difference(doc1)
-    print(result)
+    t1 = set(t1)
+    t2 = ps.stem(t2)
+    doc1 = set(words[t2].keys())
+    result_t2 = set(range(1, number_of_doc+1)).difference(doc1)
+    if op == "AND":
+        result = t1 & result_t2
+    elif op == "OR":
+        result = t1 | result_t2
+    else:
+        "The Operand has not defined."
+        result = 0
     return result
 
 
@@ -182,19 +172,110 @@ def near(num, t1, t2, num2=None, t3=None):
                             return result
 
 
+def intersect2(t1, t2):
+    global words
+    t2 = ps.stem(t2)
+    doc2 = set(words[t2].keys())
+    t1 = set(t1)
+    return t1 & doc2
+
+
+def union2(t1,t2):
+    global words
+    t2 = ps.stem(t2)
+    doc2 = set(words[t2].keys())
+    t1 = set(t1)
+    return t1 | doc2
+
+
+def query():
+    # alireza AND friend
+    t1 = "alireza"
+    t2 = "friend"
+    q1 = intersect(t1, t2)
+
+    # alireza AND apologise
+    t1 = "alireza"
+    t2 = "apologise"
+    q2 = intersect(t1, t2)
+
+    # proud AND friend AND responsible
+    t1 = "proud"
+    t2 = "friend"
+    t3 = "responsible"
+    q3 = intersect(t1, t2, t3)
+
+    # apologise OR mistake
+    t1 = "apologise"
+    t2 = "mistake"
+    q4 = union(t1,t2)
+
+    # years OR Hector OR NOT problems
+    t1 = "years"
+    t2 = "Hector"
+    t3 = "problems"
+    q5 = NOT(union(t1, t2), "OR", t3)
+
+    # NOT apologise OR glad AND NOT meet
+    t1 = "apologise"
+    t2 = "glad"
+    t3 = "meet"
+    q6 = NOT(NOT(union(t2), "OR", t1), "AND", t3)
+
+    # my OR best AND friend
+    t1 = "my"
+    t2 = "best"
+    t3 = "friend"
+    q7 = intersect2(union(t1,t2), t3)
+
+    # my AND NOT his OR friend
+    t1 = "my"
+    t2 = "his"
+    t3 = "friend"
+    q8 = union2(NOT(t2, "AND", t1), t3)
+
+    # let with me with know
+    t1 = "let"
+    t2 = "me"
+    t3 = "know"
+    q9 = with_op(t1, t2, t3)
+
+    # please NEAR 2 know NEAR 1 it
+    t1 = "please"
+    t2 = "know"
+    t3 = "it"
+    q10 = near(2,t1,t2,1,t3)
+
+    # twenty NEAR 2 old
+    t1 = "twenty"
+    t2 = "old"
+    q11 = near(2, t1, t2)
+
+    # responsible WITH for NEAR 2 problems
+    t1 = "responsible"
+    t2 = "for"
+    t3 = "problems"
+    q12 = near(0,t1,t2,2,t3)
+
+    # twenty NEAR 1 years with old
+    t1 = "twenty"
+    t2 = "years"
+    t3 = "old"
+    q13 =  near(1,t1,t2,0,t3)
+
+
+
+number_of_doc = int(input("Enter Number of docs:"))
 read_common_words()
 read_docs()
 words = OrderedDict(sorted(words.items(), key=lambda t: t[0]))
 print(words)
-print((list(words.values())))
-#query_numbers = 7
-#print(query_numbers)
-#read_queries(query_numbers)
-t1 = "my"
-t2 = "best"
-t3 = "friend"
-#intersect(t1, t2)
-#union(t1,t2)
-#NOT(t2)
-#with_op(t1, t2, t3)
-print(near(1,t1,t3))
+# query_numbers = 7
+# print(query_numbers)
+# read_queries(query_numbers)
+# intersect(t1, t2)
+# union(t1,t2)
+# NOT(t2)
+# with_op(t1, t2, t3)
+#print(near(1,t1,t3))
+query()
