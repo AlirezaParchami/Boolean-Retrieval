@@ -50,11 +50,76 @@ def read_docs():
                     entry_value = append_docId_pos(i, indices, entry_value)
                     words[stem_word] = entry_value
                     added_words.append(edited_word)
-        print(added_words)
+
+
+def read_queries(num):
+    for i in range(1, num):
+        st = "./Queries/" + str(i) + ".txt"
+        my_file = open(st, "r")
+        f = my_file.read()
+        f = f.split()
+        keywords = [i for i, x in enumerate(f) if x == 'AND' or x == 'OR' or x == 'NOT' or x == 'with' or x == 'Near']
+        print(keywords)
+        result = []
+
+        for j in range(0, len(keywords)-1):
+            if (keywords[j+1] == keywords[j] + 1) and (f[keywords[j]] == "OR" or f[keywords[j]] == "AND") and (f[keywords[j+1]] != "NOT"):
+                result = "invalid"
+                break
+        if result == "invalid":
+            print("Invalid Query!")
+            continue
+
+        for index in keywords:
+            if f[index] == "AND":
+                left_operand = f[index-1]
+                not_operand = False
+                right_operand = f[index+1]
+                if index + 1 in keywords:  # The word must be "NOT"
+                    not_operand = True
+                    right_operand = f[index+2]
+
+
+def intersect(t1, t2):
+    global words
+    t1 = ps.stem(t1)
+    t2 = ps.stem(t2)
+    doc1 = set(words[t1].keys())
+    doc2 = set(words[t2].keys())
+    result = doc1.intersection(doc2)
+    print(result)
+    return result
+
+def union(t1, t2):
+    global words
+    t1 = ps.stem(t1)
+    t2 = ps.stem(t2)
+    doc1 = set(words[t1].keys())
+    doc2 = set(words[t2].keys())
+    result = doc1.union(doc2)
+    print(result)
+    return result
+
+def NOT(t1):
+    global words
+    t1 = ps.stem(t1)
+    doc1 = set(words[t1].keys())
+    print(doc1)
+    result = set(range(1, 7)).difference(doc1)
+    print(result)
+    return result
 
 
 read_common_words()
 read_docs()
 words = OrderedDict(sorted(words.items(), key=lambda t: t[0]))
 print(words)
-#ps = PorterStemmer()
+print((list(words.values())))
+#query_numbers = 7
+#print(query_numbers)
+#read_queries(query_numbers)
+t1 = "alireza"
+t2 = "computer"
+#intersect(t1, t2)
+#union(t1,t2)
+NOT(t2)
