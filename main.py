@@ -5,6 +5,7 @@ frequent_words = set()
 words = dict()
 ps = PorterStemmer()
 
+
 def read_common_words():
     f = open("frequent.txt", "r")
     for x in f:
@@ -90,6 +91,7 @@ def intersect(t1, t2):
     print(result)
     return result
 
+
 def union(t1, t2):
     global words
     t1 = ps.stem(t1)
@@ -99,6 +101,7 @@ def union(t1, t2):
     result = doc1.union(doc2)
     print(result)
     return result
+
 
 def NOT(t1):
     global words
@@ -110,6 +113,75 @@ def NOT(t1):
     return result
 
 
+def with_op(t1, t2, t3=None):
+    global words
+    result = []
+    t1 = ps.stem(t1)
+    t2 = ps.stem(t2)
+    doc1 = OrderedDict(words[t1])
+    doc2 = OrderedDict(words[t2])
+    if t3 == None:
+        for x in set(doc2.keys()).intersection(set(doc1.keys())):
+            d1 = doc1[x]
+            d2 = doc2[x]
+            for index in d1:
+                if index+1 in d2:
+                    result.append(x)
+                    break
+    else:
+        t3 = ps.stem(t3)
+        doc3 = OrderedDict(words[t3])
+        for x in set(set(doc2.keys()).intersection(set(doc1.keys()))).intersection(set(doc3.keys())):
+            d1 = doc1[x]
+            d2 = doc2[x]
+            d3 = doc3[x]
+            for index in d1:
+                if index + 1 in d2 and index + 2 in d3:
+                    result.append(x)
+                    break
+    return result
+
+
+def near(num, t1, t2, num2=None, t3=None):
+    global words
+    result = []
+    t1 = ps.stem(t1)
+    t2 = ps.stem(t2)
+    doc1 = OrderedDict(words[t1])
+    doc2 = OrderedDict(words[t2])
+    if num2==None and t3==None:
+        for x in set(doc2.keys()).intersection(set(doc1.keys())):
+            d1 = doc1[x]
+            d2 = doc2[x]
+            for index in d1:
+                for index2 in d2:
+                    if 1 <= index2 - index <= num +1:
+                        result.append(x)
+                        break
+        return result
+    else:
+        t3 = ps.stem(t3)
+        doc3 = OrderedDict(words[t3])
+        for x in set(set(doc2.keys()).intersection(set(doc1.keys()))).intersection(set(doc3.keys())):
+            d1 = doc1[x]
+            d2 = doc2[x]
+            d3 = doc3[x]
+            maybe_true = False
+            for index in d1:
+                for index2 in d2:
+                    if 1 <= index2 - index <= num + 1 :
+                        maybe_true = True
+                        break
+                if maybe_true == True:
+                    break
+            for index2 in d2:
+                for index3 in d3:
+                    if 1 <= index3 - index2 <= num2 + 1:
+                        if maybe_true == True:
+                            result.append(x)
+                            return result
+
+
 read_common_words()
 read_docs()
 words = OrderedDict(sorted(words.items(), key=lambda t: t[0]))
@@ -118,8 +190,11 @@ print((list(words.values())))
 #query_numbers = 7
 #print(query_numbers)
 #read_queries(query_numbers)
-t1 = "alireza"
-t2 = "computer"
+t1 = "my"
+t2 = "best"
+t3 = "friend"
 #intersect(t1, t2)
 #union(t1,t2)
-NOT(t2)
+#NOT(t2)
+#with_op(t1, t2, t3)
+print(near(1,t1,t3))
