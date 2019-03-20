@@ -25,7 +25,7 @@ def append_docId_pos(docId, indices, docID_pos_dic):
 
 def read_docs():
     for i in range(1, number_of_doc + 1):
-        st = str(i) + ".txt"
+        st = "./Documents/" + str(i) + ".txt"
         my_file = open(st, "r")
         f = my_file.read().lower()
         f = f.split()
@@ -87,12 +87,12 @@ def union(t1, t2=None, t3=None):
     return result
 
 
-def NOT(t1 , op, t2):
+def NOT(t1, op, t2):
     global words
-    t1 = set(t1)
     t2 = ps.stem(t2)
-    doc1 = set(words[t2].keys())
-    result_t2 = set(range(1, number_of_doc + 1)).difference(doc1)
+    doc2 = set(words[t2].keys())
+    result_t2 = set(range(1, number_of_doc + 1)).difference(doc2)
+    t1 = set(t1)
     if op == "AND":
         result = t1 & result_t2
     elif op == "OR":
